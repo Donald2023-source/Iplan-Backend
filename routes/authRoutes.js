@@ -1,6 +1,5 @@
-
 const express = require('express');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // Change from 'bcrypt' to 'bcryptjs'
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
@@ -21,17 +20,17 @@ router.post('/signup', async (req, res) => {
 
     if (StaffId) {
       return res.status(400).json({ message: 'Staff ID already exists' });
-    } else if(existingFirstName ) {
-      return res.status(400).json({message: 'Name already exists'})
-    } 
+    } else if (existingFirstName) {
+      return res.status(400).json({ message: 'Name already exists' });
+    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10); // Use bcryptjs hash method
     const newUser = await User.create({
       firstName,
       lastName,
       email,
       password: hashedPassword,
-      staffId
+      staffId,
     });
     res.status(201).json(newUser);
   } catch (error) {
@@ -53,13 +52,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password); // Use bcryptjs compare method
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     const token = jwt.sign({ id: user._id, role: user.role }, 'me@dev123', {
-      expiresIn: '1h'
+      expiresIn: '1h',
     });
 
     res.status(200).json({ token, user });
@@ -72,8 +71,8 @@ router.post('/login', async (req, res) => {
 router.post('/admin/signup', async (req, res) => {
   const { firstName, lastName, email, password, staffId, adminKey } = req.body;
 
-  console.log("Received adminKey:", adminKey);
-  console.log("Expected ADMIN_KEY:", ADMIN_KEY);
+  console.log('Received adminKey:', adminKey);
+  console.log('Expected ADMIN_KEY:', ADMIN_KEY);
 
   if (!firstName || !lastName || !email || !password || !staffId || !adminKey) {
     return res.status(400).json({ message: 'All fields are required' });
@@ -89,7 +88,7 @@ router.post('/admin/signup', async (req, res) => {
       return res.status(400).json({ message: 'Staff ID already exists' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10); // Use bcryptjs hash method
     const newAdmin = await User.create({
       firstName,
       lastName,
@@ -97,7 +96,7 @@ router.post('/admin/signup', async (req, res) => {
       password: hashedPassword,
       role: 'admin',
       staffId,
-      adminKey // Store the admin key
+      adminKey, // Store the admin key
     });
     return res.status(201).json(newAdmin);
   } catch (error) {
@@ -109,11 +108,13 @@ router.post('/admin/signup', async (req, res) => {
 router.post('/admin/login', async (req, res) => {
   const { email, password, adminKey } = req.body;
 
-  console.log("Received adminKey:", adminKey);
-  console.log("Expected ADMIN_KEY:", ADMIN_KEY);
+  console.log('Received adminKey:', adminKey);
+  console.log('Expected ADMIN_KEY:', ADMIN_KEY);
 
   if (!email || !password || !adminKey) {
-    return res.status(400).json({ message: 'Email, password, and admin key are required' });
+    return res
+      .status(400)
+      .json({ message: 'Email, password, and admin key are required' });
   }
 
   if (adminKey !== ADMIN_KEY) {
@@ -126,13 +127,13 @@ router.post('/admin/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await bcrypt.compare(password, admin.password); // Use bcryptjs compare method
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     const token = jwt.sign({ id: admin._id, role: admin.role }, 'me@dev123', {
-      expiresIn: '1h'
+      expiresIn: '1h',
     });
 
     return res.status(200).json({ token, admin });
@@ -149,6 +150,5 @@ router.get('/users', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 module.exports = router;

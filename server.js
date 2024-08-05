@@ -1,7 +1,7 @@
 const express = require('express');
 const session = require('express-session'); // Correct import for express-session
 const app = express();
-const port = 3000;
+const port= process.env.PORT || 3000;
 
 // Middleware setup for session
 app.use(session({
