@@ -14,7 +14,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // Replace with your frontend's URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
+
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, './uploads')));
