@@ -7,7 +7,7 @@
     const Term = require('../models/Term');
     const LessonPlan = require('../models/lessonPlan'); // Correct capitalization
     const Subject = require('../models/Subjects'); // Import Subject model
-    const Comment = require('../models/Comment');
+    const Comment = require('../models/comment');
     const classes = require('../data/classes');
     const juniorSubjects = require('../data/juniorSubjects');
     const seniorSubjects = require('../data/seniorSubjects');
