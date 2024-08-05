@@ -1,20 +1,51 @@
 const express = require('express');
-const session = require('express-session'); // Correct import for express-session
-const app = express();
-const port = 3000;
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const passport = require('passport');
+const authRoutes = require('./routes/authRoutes');
+const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
+const path = require('path');
+const sessionRoutes = require('./routes/sessionRoutes')
 
-// Middleware setup for session
+
+const app = express();
+const PORT = 3000;
+
+app.use(cors());
+app.use(bodyParser.json());
+
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, './uploads'))); // Ensure correct path
+
 app.use(session({
-  secret: '1172', 
+  secret: process.env.SESSION_SECRET || 'someRandomSessionSecret',
   resave: false,
   saveUninitialized: false
 }));
 
-// Example route
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+app.use(passport.initialize());
+app.use(passport.session());
+
+require('./auth/passport'); 
+
+mongoose.connect('mongodb://127.0.0.1:27017/mydatabase', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
 });
 
-app.listen(port, () => {
-  console.log(`Backend server is running at http://localhost:${port}`);
-});
+app.use('/api/auth', authRoutes);
+app.use('/api/lesson-plans', lessonPlanRoutes);
+app.use('/sessions', sessionRoutes); // Ensure this path matches client-side request
+
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
