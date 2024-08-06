@@ -8,7 +8,8 @@ const passport = require('passport');
 const authRoutes = require('./routes/authRoutes');
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 const path = require('path');
-const sessionRoutes = require('./routes/sessionRoutes')
+const sessionRoutes = require('./routes/sessionRoutes');
+const MongoStore = require('connect-mongo')
 
 dotenv.config();
 
@@ -25,17 +26,19 @@ app.use('/uploads', express.static(path.join(__dirname, './uploads'))); // Ensur
 app.use(session({
   secret: process.env.SESSION_SECRET || 'someRandomSessionSecret',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: 'mongodb+srv://donalddyusuf:orVEZja4ABJlb5ZP@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers',
+    collectionName: 'sessions'
+  })
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 require('./auth/passport'); 
-mongodb://127.0.0.1:27017/st_christophers
+
 mongoose.connect('mongodb+srv://donalddyusuf:orVEZja4ABJlb5ZP@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000
 })
