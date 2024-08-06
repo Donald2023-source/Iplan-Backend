@@ -44,14 +44,15 @@ require('./auth/passport'); // Ensure passport configuration is correct
 mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000
+  serverSelectionTimeoutMS: 30000, // Increased timeout
+  socketTimeoutMS: 45000,
 })
 .then(() => console.log('MongoDB connected'))
 .catch(err => {
-  console.error('MongoDB connection error:', err);
+  console.error('MongoDB connection error:', err.message); // Log error message
   process.exit(1);
 });
+
 
 // Routes
 app.use('/api/auth', authRoutes);
