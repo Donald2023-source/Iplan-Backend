@@ -30,7 +30,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', // Use environment variable
+    mongoUrl: 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', // Use environment variable
   }),
   cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 60000 }, // Secure cookies in production
 }));
@@ -42,8 +42,7 @@ require('./auth/passport'); // Ensure passport configuration is correct
 
 // Connect to MongoDB
 mongoose.connect('mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  tls: true,
   serverSelectionTimeoutMS: 30000,
   socketTimeoutMS: 45000,
 })
