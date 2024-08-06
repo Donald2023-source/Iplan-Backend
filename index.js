@@ -20,7 +20,7 @@ const uri = "mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mong
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Use environment variable for frontend URL
+  origin: 'http://localhost:5173', // Use environment variable for frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
@@ -31,11 +31,11 @@ app.use('/uploads', express.static(path.join(__dirname, './uploads')));
 
 // Session setup
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'someRandomSessionSecret',
+  secret: 'someRandomSessionSecret',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI || uri, // Use environment variable for MongoDB URI
+    mongoUrl: uri, // Use environment variable for MongoDB URI
   }),
 }));
 
