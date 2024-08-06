@@ -15,6 +15,9 @@ require('dotenv').config();
 const app = express();
 const PORT = 3000;
 
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = "mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&appName=MyDatabase";
+
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Use environment variable for frontend URL
@@ -32,7 +35,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&ssl=true', // Use environment variable for MongoDB URI
+    mongoUrl: process.env.MONGODB_URI || uri, // Use environment variable for MongoDB URI
   }),
 }));
 
@@ -42,17 +45,26 @@ app.use(passport.session());
 require('./auth/passport'); // Ensure passport configuration is correct
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&ssl=true', {
-  tls: true,
-  serverSelectionTimeoutMS: 50000, // Increased timeout
-  socketTimeoutMS: 60000, // Increased timeout
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => {
-  console.error('MongoDB connection error:', err.message); // Log error message
-  process.exit(1);
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
 });
-
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
+  }
+}
+run().catch(console.dir);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/lesson-plans', lessonPlanRoutes);
