@@ -32,7 +32,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&appName=MyDatabase&ssl=true', // Use environment variable for MongoDB URI
+    mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&ssl=true', // Use environment variable for MongoDB URI
   }),
 }));
 
@@ -42,7 +42,7 @@ app.use(passport.session());
 require('./auth/passport'); // Ensure passport configuration is correct
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&appName=MyDatabase&ssl=true', {
+mongoose.connect('mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&ssl=true', {
   tls: true,
   serverSelectionTimeoutMS: 50000, // Increased timeout
   socketTimeoutMS: 60000, // Increased timeout
