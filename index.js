@@ -12,7 +12,7 @@ require('dotenv').config();
 const { connect } = require('./connect'); // Import connect function
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors({
