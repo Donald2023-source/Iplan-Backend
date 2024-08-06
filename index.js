@@ -20,6 +20,8 @@ app.use(cors({
   credentials: true,
 }));
 
+mongoose.set('debug', true)
+
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, './uploads')));
@@ -43,8 +45,6 @@ require('./auth/passport'); // Ensure passport configuration is correct
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', {
   tls: true,
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 30000,
   socketTimeoutMS: 45000,
 })
