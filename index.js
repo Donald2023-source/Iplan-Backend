@@ -31,7 +31,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority', // Provide MongoDB URI here
+    mongoUrl: 'mongodb+srv://donalddyusuf:pj234frr@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers', // Provide MongoDB URI here
   }),
 }));
 
