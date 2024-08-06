@@ -27,7 +27,18 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, './uploads')));
 
 // Session setup
-
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'someRandomSessionSecret',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&appName=MyDatabase', // Use environment variable for MongoDB URI
+    mongoOptions: {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  }),
+}));
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -35,7 +46,7 @@ app.use(passport.session());
 require('./auth/passport'); // Ensure passport configuration is correct
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', {
+mongoose.connect('mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&appName=MyDatabase', {
   tls: true,
   serverSelectionTimeoutMS: 50000, // Increased timeout
   socketTimeoutMS: 60000, // Increased timeout
