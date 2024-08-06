@@ -1,4 +1,4 @@
-require('dotenv').config();
+
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -11,9 +11,9 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
-
+require('dotenv').config();
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Middleware
 app.use(cors({
