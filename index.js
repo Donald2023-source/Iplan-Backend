@@ -1,9 +1,6 @@
-
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const MongoStore = require('connect-mongo');
@@ -12,15 +9,14 @@ const authRoutes = require('./routes/authRoutes');
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 require('dotenv').config();
+const { connect } = require('./connect'); // Import connect function
+
 const app = express();
 const PORT = 3000;
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority&ssl=true";
-
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Use environment variable for frontend URL
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
@@ -31,11 +27,11 @@ app.use('/uploads', express.static(path.join(__dirname, './uploads')));
 
 // Session setup
 app.use(session({
-  secret: 'someRandomSessionSecret',
+  secret: process.env.SESSION_SECRET || 'someRandomSessionSecret',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: uri, // Use environment variable for MongoDB URI
+    mongoUrl: 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/?retryWrites=true&w=majority', // Provide MongoDB URI here
   }),
 }));
 
@@ -45,29 +41,12 @@ app.use(passport.session());
 require('./auth/passport'); // Ensure passport configuration is correct
 
 // Connect to MongoDB
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
-async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
-  }
-}
-run().catch(console.dir);
+connect().then(() => {
+  // Start the server only after successful MongoDB connection
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}).catch(console.dir);
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/lesson-plans', lessonPlanRoutes);
 app.use('/sessions', sessionRoutes);
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
