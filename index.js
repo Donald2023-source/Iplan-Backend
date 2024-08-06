@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -15,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Replace with your frontend's URL
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Use environment variable for frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
@@ -30,7 +32,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl:'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', // Use environment variable
+    mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', // Use environment variable for MongoDB URI
+    mongoOptions: {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
   }),
 }));
 
@@ -40,18 +46,17 @@ app.use(passport.session());
 require('./auth/passport'); // Ensure passport configuration is correct
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:WXcI7pndqPQW9vt3@mydatabase.o2rvqvt.mongodb.net/', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 30000, // Increased timeout
-  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 50000, // Increased timeout
+  socketTimeoutMS: 60000, // Increased timeout
 })
 .then(() => console.log('MongoDB connected'))
 .catch(err => {
   console.error('MongoDB connection error:', err.message); // Log error message
   process.exit(1);
 });
-
 
 // Routes
 app.use('/api/auth', authRoutes);
