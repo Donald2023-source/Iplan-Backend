@@ -1,52 +1,53 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const session = require('express-session');
 const passport = require('passport');
-const MongoStore = require('connect-mongo');
-const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
-const sessionRoutes = require('./routes/sessionRoutes');
-require('dotenv').config();
-const { connect } = require('./connect'); // Import connect function
+const path = require('path');
+const sessionRoutes = require('./routes/sessionRoutes')
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-}));
+app.use(cors());
+app.use(bodyParser.json());
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, './uploads')));
+app.use('/uploads', express.static(path.join(__dirname, './uploads'))); // Ensure correct path
 
-// Session setup
 app.use(session({
   secret: process.env.SESSION_SECRET || 'someRandomSessionSecret',
   resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: 'mongodb+srv://donalddyusuf:pj234frr@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers', // Provide MongoDB URI here
-  }),
+  saveUninitialized: false
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-require('./auth/passport'); // Ensure passport configuration is correct
+require('./auth/passport'); 
+mongodb://127.0.0.1:27017/st_christophers
+mongoose.connect('mongodb+srv://donalddyusuf:pj234frr@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
 
-// Connect to MongoDB
-connect().then(() => {
-  // Start the server only after successful MongoDB connection
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}).catch(console.dir);
-
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/lesson-plans', lessonPlanRoutes);
-app.use('/sessions', sessionRoutes);
+app.use('/sessions', sessionRoutes); // Ensure this path matches client-side request
+
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
