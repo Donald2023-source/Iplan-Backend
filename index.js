@@ -33,7 +33,7 @@ app.use(passport.session());
 
 require('./auth/passport'); 
 mongodb://127.0.0.1:27017/st_christophers
-mongoose.connect('mongodb+srv://donalddyusuf:NLVfsOVpPFBsnnfu@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers', {
+mongoose.connect('mongodb+srv://donalddyusuf:orVEZja4ABJlb5ZP@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,

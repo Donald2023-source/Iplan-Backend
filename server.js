@@ -14,7 +14,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: 'mongodb+srv://donalddyusuf:NLVfsOVpPFBsnnfu@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers', // Use your MongoDB connection string
+      mongoUrl: 'mongodb+srv://donalddyusuf:orVEZja4ABJlb5ZP@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority&appName=St-Christophers', // Use your MongoDB connection string
     }),
     cookie: { secure: true, maxAge: 60000 }, // Example cookie settings
   })
