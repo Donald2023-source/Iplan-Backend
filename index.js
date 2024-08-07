@@ -16,14 +16,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-// Use CORS middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend's origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  origin: ['http://localhost:5173', 'https://iplan-frontend-cposkqzta-donalds-projects-5f9be5f1.vercel.app'], // Allow both local and deployed frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // Allow credentials to be included in the request
 }));
-
 // Alternatively, for a more permissive setup during development
 app.use(cors()); // This will allow requests from any origin
 
