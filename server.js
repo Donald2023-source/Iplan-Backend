@@ -9,11 +9,27 @@ const port = process.env.PORT || 4000;
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
+const allowedOrigins = [
+  'http://localhost:5173', // Local development
+  'https://iplan-frontend-cposkqzta-donalds-projects-5f9be5f1.vercel.app' // Vercel deployment
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend's origin
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  credentials: true, // Allow credentials to be included in the request
 }));
+// Alternatively, for a more permissive setup during development
+app.use(cors()); // This will allow requests from any origin
 
 app.use(
   session({
