@@ -2,12 +2,14 @@ const express = require('express');
 const session = require('express-session'); // Correct import for express-session
 const MongoStore = require('connect-mongo');
 const app = express();
+const cors = require('cors')
 const port = process.env.PORT || 4000;
 
 // Middleware setup for session
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
+app.use(cors());
 app.use(
   session({
     secret: '1172',
