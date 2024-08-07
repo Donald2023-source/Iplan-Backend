@@ -16,9 +16,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Use CORS middleware
 app.use(cors({
-  origin: 'http://localhost:5173'
+  origin: 'http://localhost:5173', // Your frontend's origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
 }));
+
+// Alternatively, for a more permissive setup during development
+app.use(cors()); // This will allow requests from any origin
 
 app.use(bodyParser.json());
 
