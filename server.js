@@ -9,8 +9,12 @@ const port = process.env.PORT || 4000;
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
-app.use(cors());
-app.options('*', cors());
+
+app.use(cors({
+  origin: '*', // or '*'
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(
   session({
