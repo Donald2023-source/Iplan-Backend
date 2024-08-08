@@ -16,13 +16,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({
-  origin: '*', // or '*'
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
 
+// const corsOptions = {
+//   origin: 'https://your-production-domain.com', // Set this to your front-end's URL
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+// };
 
+// // Apply the CORS middleware
+// app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 
