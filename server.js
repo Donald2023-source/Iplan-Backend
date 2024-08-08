@@ -10,6 +10,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
 app.use(cors());
+app.options('*', cors());
 
 app.use(
   session({
@@ -17,9 +18,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: 'mongodb+srv://donalddyusuf:orVEZja4ABJlb5ZP@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority', // Use your MongoDB connection string
+      mongoUrl: 'mongodb+srv://donalddyusuf:orVEZja4ABJlb5ZP@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority', 
     }),
-    cookie: { secure: true, maxAge: 60000 }, // Example cookie settings
+    cookie: { secure: true, maxAge: 60000 },
   })
 );
 
