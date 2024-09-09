@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const Session = require('../models/Session');
 const Term = require('../models/Term');
-const LessonPlan = require('../models/LessonPlan'); // Correct capitalization
+const LessonPlan = require('../models/lessonPlan'); // Correct capitalization
 const Subject = require('../models/Subjects'); // Import Subject model
 const Comment = require('../models/Comment'); // Correct capitalization
 const classes = require('../data/classes');
