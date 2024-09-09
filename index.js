@@ -9,7 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 const path = require('path');
 const sessionRoutes = require('./routes/sessionRoutes');
-const MongoStore = require('connect-mongo')
+const MongoStore = require('connect-mongo');
 
 dotenv.config();
 
@@ -18,10 +18,11 @@ const PORT = process.env.PORT || 3000;
 
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Replace with your frontend URL
-  methods: 'GET,POST,PUT,DELETE',
-  credentials: true, // Allows sending cookies/authorization headers
+  origin: '*',
+  methods: '*',
+  credentials: true,
 }));
+
 
 
 
