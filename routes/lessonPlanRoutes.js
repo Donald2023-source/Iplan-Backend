@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const LessonPlan = require('../models/lessonPlan');
+const LessonPlan = require('../models/LessonPlan');
 
 const authMiddleware = require('../middlewares/authMiddleware');
 const router = express.Router();
