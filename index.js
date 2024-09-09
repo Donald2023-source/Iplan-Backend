@@ -10,6 +10,7 @@ const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 const path = require('path');
 const sessionRoutes = require('./routes/sessionRoutes');
 const MongoStore = require('connect-mongo');
+const upload   = require('./uploads')
 
 dotenv.config();
 
