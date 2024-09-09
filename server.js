@@ -9,14 +9,9 @@ const port = process.env.PORT || 4000;
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
-const corsOptions = {
-  origin: 'http://localhost:5173', // Set this to your front-end's URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
+app.use(cors())
 
-// Apply the CORS middleware
-app.use(cors(corsOptions));
+
 app.use(
   session({
     secret: '1172',
