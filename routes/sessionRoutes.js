@@ -144,6 +144,10 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
 
   const { filename } = req.file;
 
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Disposition', 'inline');
+  res.setHeader('Content-Type', 'application/pdf');
+
   try {
     const lessonPlan = new LessonPlan({
       title,
@@ -167,9 +171,6 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
       subject = { name: 'Unknown Subject' };
     }
 
-    res.setHeader('Content-Disposition', 'inline'); // This ensures the file opens in the browser
-    res.setHeader('Content-Type', 'application/pdf'); 
-    
     // Fetch existing lesson plans
     const existingLessonPlans = await LessonPlan.find({ 
       sessionId: new mongoose.Types.ObjectId(req.params.sessionId), 
@@ -194,6 +195,11 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
 // Fetch lesson plans by class
 // Fetch lesson plans by class
 router.get('/:sessionId/terms/:termId/classes/:classId/lessonPlans', async (req, res) => {
+
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Disposition', 'inline');
+  res.setHeader('Content-Type', 'application/pdf');
+
 try {
   const { sessionId, termId, classId } = req.params;
 
@@ -245,6 +251,10 @@ try {
 
 // Fetch lesson plans by subject and class
 router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Disposition', 'inline');
+  res.setHeader('Content-Type', 'application/pdf');
+  
   try {
     const { sessionId, termId, classId, subjectId } = req.params;
 
