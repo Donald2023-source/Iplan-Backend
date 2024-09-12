@@ -167,6 +167,9 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
       subject = { name: 'Unknown Subject' };
     }
 
+    res.setHeader('Content-Disposition', 'inline'); // This ensures the file opens in the browser
+    res.setHeader('Content-Type', 'application/pdf'); 
+    
     // Fetch existing lesson plans
     const existingLessonPlans = await LessonPlan.find({ 
       sessionId: new mongoose.Types.ObjectId(req.params.sessionId), 
@@ -204,14 +207,9 @@ try {
     return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
   }
 
-  res.setHeader('Content-Disposition', 'inline'); // This ensures the file opens in the browser
+    res.setHeader('Content-Disposition', 'inline'); // This ensures the file opens in the browser
   res.setHeader('Content-Type', 'application/pdf'); // Assuming all files are PDFs
-   // Set CORS headers to allow requests from other origins
-   res.setHeader('Access-Control-Allow-Origin', '*'); // Allows any domain to access the resource
-   res.setHeader('Access-Control-Allow-Methods', 'GET'); // Allow only GET requests
-   res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Allow specific headers\
 
-   
   const updatedLessonPlans = lessonPlans.map(lessonPlan => {
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
     
@@ -249,6 +247,9 @@ try {
 router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', async (req, res) => {
   try {
     const { sessionId, termId, classId, subjectId } = req.params;
+
+    res.setHeader('Content-Disposition', 'inline'); // This ensures the file opens in the browser
+    res.setHeader('Content-Type', 'application/pdf'); 
 
     const lessonPlans = await LessonPlan.find({ 
       sessionId: new mongoose.Types.ObjectId(sessionId), 
