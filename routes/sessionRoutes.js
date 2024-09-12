@@ -1,26 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
-
 const multer = require('multer');
-const path = require('path'); // Add path module
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads/')); // Absolute path to the uploads directory
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-
-const upload = multer({ storage }); // Use the new storage configuration
-
-
+const upload = multer({ dest: '../uploads/' });
+const fs = require('fs'); 
 const Session = require('../models/Session');
 const Term = require('../models/Term');
 const LessonPlan = require('../models/lessonPlan'); // Correct capitalization
 const Subject = require('../models/Subjects'); // Import Subject model
-const Comment = require('../models/comment');
+const Comment = require('../models/Comment');
 const classes = require('../data/classes');
 const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
@@ -165,6 +152,7 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
       termId: req.params.termId,
       classId: req.params.classId,
       subjectId: parseInt(req.params.subjectId), // Ensure subjectId is numeric
+      uploadedBy: req.user.id,
       comments: []
     });
     await lessonPlan.save();
@@ -207,16 +195,12 @@ router.get('/:sessionId/terms/:termId/classes/:classId/lessonPlans', async (req,
 try {
   const { sessionId, termId, classId } = req.params;
 
-  console.log(`Fetching lesson plans for sessionId: ${sessionId}, termId: ${termId}, classId: ${classId}`);
-  
   const lessonPlans = await LessonPlan.find({ 
     sessionId: new mongoose.Types.ObjectId(sessionId), 
     termId: new mongoose.Types.ObjectId(termId), 
     classId: parseInt(classId) // Ensure classId is numeric
-  }).populate('sessionId termId classId comments subjectId', 'name');
-  
-  console.log('Lesson Plans:', lessonPlans);
-  
+  }).populate('sessionId termId classId subjectId comments', 'name text'); // Populate comments with their text
+
   if (!lessonPlans.length) {
     return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
   }
@@ -239,7 +223,8 @@ try {
     return {
       ...lessonPlan.toObject(),
       subjectName,
-      fileUrl
+      fileUrl,
+      uploadedByName: lessonPlan.uploadedBy.name
     };
   });
 
@@ -249,6 +234,7 @@ try {
   res.status(500).json({ error: error.message });
 }
 });
+
 
 
 
@@ -262,7 +248,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
       termId: new mongoose.Types.ObjectId(termId), 
       classId: parseInt(classId), // Ensure classId is numeric
       subjectId: parseInt(subjectId) // Ensure subjectId is numeric
-    }).populate('sessionId termId comments', 'name');
+    }).populate('sessionId termId classId comments', 'name text'); // Populate comments with their text
 
     if (!lessonPlans.length) {
       return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
@@ -280,7 +266,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
     }
 
     const updatedLessonPlans = lessonPlans.map(lessonPlan => {
-      const fileUrl = `${req.protocol}://${req.get('host')}/${lessonPlan.file}`;
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
       return {
         ...lessonPlan.toObject(),
         subjectName: subject.name,
@@ -295,26 +281,45 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
   }
 });
 
+
 // Update lesson plan
-router.put('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId', async (req, res) => {
+router.put('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId', upload.single('lessonPlan'), async (req, res) => {
   try {
     const { lessonPlanId } = req.params;
     const { title } = req.body;
+    const file = req.file;
 
     if (!title) {
       return res.status(400).json({ error: 'Title is required' });
     }
 
-    const lessonPlan = await LessonPlan.findByIdAndUpdate(lessonPlanId, { title }, { new: true, runValidators: true });
-    if (!lessonPlan) {
+    // Find the existing lesson plan
+    const existingLessonPlan = await LessonPlan.findById(lessonPlanId);
+    if (!existingLessonPlan) {
       return res.status(404).json({ error: 'Lesson plan not found' });
     }
 
-    res.status(200).json(lessonPlan);
+    // Delete the old file if a new file is uploaded
+    if (file && existingLessonPlan.file) {
+      const oldFilePath = `./uploads/${existingLessonPlan.file}`;
+      fs.unlink(oldFilePath, (err) => {
+        if (err) console.error('Error deleting old file:', err);
+      });
+    }
+
+    // Update the lesson plan with the new data
+    const updateData = { title };
+    if (file) {
+      updateData.file = file.filename; // Store new file name
+    }
+
+    const updatedLessonPlan = await LessonPlan.findByIdAndUpdate(lessonPlanId, updateData, { new: true, runValidators: true });
+    res.status(200).json(updatedLessonPlan);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Delete a lesson plan
 router.delete('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId', async (req, res) => {
@@ -407,7 +412,7 @@ router.post('/:sessionId/terms/:termId/classes/:classId/lessonPlans/:lessonPlanI
 router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId/comments', async (req, res) => {
   try {
     const { lessonPlanId } = req.params;
-    const lessonPlan = await LessonPlan.findById(lessonPlanId).populate('comments'); // Ensure comments are populated
+    const lessonPlan = await LessonPlan.findById(lessonPlanId).populate('comments', 'text'); // Ensure comments are populated with their text
     if (!lessonPlan) {
       return res.status(404).json({ error: 'Lesson plan not found' });
     }
@@ -417,6 +422,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
     res.status(500).json({ error: error.message });
   }
 });
+  
 
 
 // Update a comment
