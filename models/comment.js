@@ -1,4 +1,4 @@
-
+// models/Comment.js
 const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema({
@@ -7,4 +7,4 @@ const commentSchema = new mongoose.Schema({
   lessonPlanId: { type: mongoose.Schema.Types.ObjectId, ref: 'LessonPlan' }
 });
 
-module.exports = mongoose.model('Comment', commentSchema); 
+module.exports = mongoose.model('Comment', commentSchema);
