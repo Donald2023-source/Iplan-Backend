@@ -7,7 +7,7 @@ const Session = require('../models/Session');
 const Term = require('../models/Term');
 const LessonPlan = require('../models/lessonPlan'); // Correct capitalization
 const Subject = require('../models/Subjects'); // Import Subject model
-const Comment = require('../models/comment');
+const Comment = require('../models/Comment');
 const classes = require('../data/classes');
 const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
@@ -152,7 +152,6 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
       termId: req.params.termId,
       classId: req.params.classId,
       subjectId: parseInt(req.params.subjectId), // Ensure subjectId is numeric
-      uploadedBy: req.user.id,
       comments: []
     });
     await lessonPlan.save();
@@ -224,7 +223,7 @@ try {
       ...lessonPlan.toObject(),
       subjectName,
       fileUrl,
-      uploadedByName: lessonPlan.uploadedBy.name
+
     };
   });
 

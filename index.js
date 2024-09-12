@@ -27,7 +27,7 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static files from 'uploads' directory
-app.use('./uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, './uploads'))); 
 
 // Session setup
 app.use(session({
@@ -36,6 +36,7 @@ app.use(session({
   saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://donalddyusuf:orVEZja4ABJlb5ZP@st-christophers.trvhc.mongodb.net/?retryWrites=true&w=majority',
+    // mongoUrl: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/st_christophers',
     collectionName: 'sessions'
   })
 }));
