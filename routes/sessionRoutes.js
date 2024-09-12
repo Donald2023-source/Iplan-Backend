@@ -276,7 +276,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
     }
 
     const updatedLessonPlans = lessonPlans.map(lessonPlan => {
-      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
+      const fileUrl = `${"https"}://${req.get('host')}/uploads/${lessonPlan.file}`;
       return {
         ...lessonPlan.toObject(),
         subjectName: subject.name,
