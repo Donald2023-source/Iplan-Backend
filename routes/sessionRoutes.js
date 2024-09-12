@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const upload = multer({ dest: './uploads/' });
+
 const fs = require('fs'); 
 const Session = require('../models/Session');
 const Term = require('../models/Term');
@@ -254,7 +255,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Disposition', 'inline');
   res.setHeader('Content-Type', 'application/pdf');
-  
+
   try {
     const { sessionId, termId, classId, subjectId } = req.params;
 
