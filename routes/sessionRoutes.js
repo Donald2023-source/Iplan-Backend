@@ -196,55 +196,46 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
 // Fetch lesson plans by class
 // Fetch lesson plans by class
 router.get('/:sessionId/terms/:termId/classes/:classId/lessonPlans', async (req, res) => {
+  try {
+    const { sessionId, termId, classId } = req.params;
 
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Content-Disposition', 'inline');
-  res.setHeader('Content-Type', 'application/pdf');
+    const lessonPlans = await LessonPlan.find({ 
+      sessionId: new mongoose.Types.ObjectId(sessionId), 
+      termId: new mongoose.Types.ObjectId(termId), 
+      classId: parseInt(classId) // Ensure classId is numeric
+    }).populate('sessionId termId classId subjectId comments', 'name text'); // Populate comments with their text
 
-try {
-  const { sessionId, termId, classId } = req.params;
-
-  const lessonPlans = await LessonPlan.find({ 
-    sessionId: new mongoose.Types.ObjectId(sessionId), 
-    termId: new mongoose.Types.ObjectId(termId), 
-    classId: parseInt(classId) // Ensure classId is numeric
-  }).populate('sessionId termId classId subjectId comments', 'name text'); // Populate comments with their text
-
-  if (!lessonPlans.length) {
-    return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
-  }
-
-    res.setHeader('Content-Disposition', 'inline'); // This ensures the file opens in the browser
-  res.setHeader('Content-Type', 'application/pdf'); // Assuming all files are PDFs
-
-  const updatedLessonPlans = lessonPlans.map(lessonPlan => {
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
-    
-    // Determine the subject name based on the subject ID
-    let subjectName = 'Unknown Subject';
-    const subjectId = lessonPlan.subjectId;
-    
-    if (parseInt(classId) >= 1 && parseInt(classId) <= 3) {
-      const subject = juniorSubjects.find(sub => sub.id === subjectId);
-      if (subject) subjectName = subject.name;
-    } else if (parseInt(classId) >= 4 && parseInt(classId) <= 6) {
-      const subject = seniorSubjects.find(sub => sub.id === subjectId);
-      if (subject) subjectName = subject.name;
+    if (!lessonPlans.length) {
+      return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
     }
-    
-    return {
-      ...lessonPlan.toObject(),
-      subjectName,
-      fileUrl,
 
-    };
-  });
+    const updatedLessonPlans = lessonPlans.map(lessonPlan => {
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
 
-  res.status(200).json(updatedLessonPlans);
-} catch (error) {
-  console.error('Error fetching lesson plans:', error);
-  res.status(500).json({ error: error.message });
-}
+      // Determine the subject name based on the subject ID
+      let subjectName = 'Unknown Subject';
+      const subjectId = lessonPlan.subjectId;
+
+      if (parseInt(classId) >= 1 && parseInt(classId) <= 3) {
+        const subject = juniorSubjects.find(sub => sub.id === subjectId);
+        if (subject) subjectName = subject.name;
+      } else if (parseInt(classId) >= 4 && parseInt(classId) <= 6) {
+        const subject = seniorSubjects.find(sub => sub.id === subjectId);
+        if (subject) subjectName = subject.name;
+      }
+
+      return {
+        ...lessonPlan.toObject(),
+        subjectName,
+        fileUrl,
+      };
+    });
+
+    res.status(200).json(updatedLessonPlans);
+  } catch (error) {
+    console.error('Error fetching lesson plans:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 
