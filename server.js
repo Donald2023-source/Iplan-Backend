@@ -10,12 +10,11 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
 app.use(cors({
-  origin: '*', // Allows all origins. Replace with specific origins for production.
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // List of allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // List of allowed headers
-  credentials: true, // Set to true if you need to support cookies
+  origin: 'http://localhost:5173', // Adjust this to match your frontend's origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true ;
 }));
-
 
 app.use(
   session({

@@ -17,10 +17,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: '*', // Allows all origins. Replace with specific origins for production.
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // List of allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // List of allowed headers
-  credentials: true, // Set to true if you need to support cookies
+  origin: 'http://localhost:5173', // Adjust this to match your frontend's origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // If you need to allow cookies or other credentials
 }));
 
 app.use(bodyParser.json({ limit: '50mb' }));
