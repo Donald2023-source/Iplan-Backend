@@ -1,7 +1,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
+
 const multer = require('multer');
-const upload = multer({ dest: './uploads/' });
+const path = require('path'); // Add path module
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads/')); // Absolute path to the uploads directory
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage }); // Use the new storage configuration
+
 
 const Session = require('../models/Session');
 const Term = require('../models/Term');
