@@ -1,29 +1,18 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const fs = require('fs');
+const upload = multer({ dest: './uploads/' });
 
 const Session = require('../models/Session');
 const Term = require('../models/Term');
 const LessonPlan = require('../models/lessonPlan'); // Correct capitalization
 const Subject = require('../models/Subjects'); // Import Subject model
-const Comment = require('../models/comment'); // Correct capitalization
+const Comment = require('../models/comment');
 const classes = require('../data/classes');
 const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
 
 const router = express.Router();
-
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Upload destination directory
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname); // Naming convention for uploaded files
-  }
-});
-const upload = multer({ storage });
 
 // Session routes
 router.post('/', async (req, res) => {
@@ -34,7 +23,7 @@ router.post('/', async (req, res) => {
     }
     const newSession = new Session({ name, year, startDate, endDate });
     await newSession.save();
-    res.status(201).json({ message: 'New session created', newSession });
+    res.status(201).json({message: 'New session Created', newSession});
   } catch (error) {
     res.status(500).json({ message: 'Something went wrong', error: error.message });
   }
@@ -45,7 +34,7 @@ router.get('/', async (req, res) => {
     const sessions = await Session.find();
     res.status(200).json(sessions);
   } catch (error) {
-    res.status(500).json({ message: 'Something went wrong', error: error.message });
+    res.status(500).json({ message: 'something went wrong', error: error.message });
   }
 });
 
@@ -94,7 +83,7 @@ router.post('/:sessionId/terms', async (req, res) => {
   try {
     const term = new Term({ ...req.body, sessionId: req.params.sessionId });
     await term.save();
-    res.status(201).json({ message: 'New term created successfully', term });
+    res.status(201).json({message: 'New term created SuccessFully', term});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -111,13 +100,14 @@ router.get('/:sessionId/terms', async (req, res) => {
 
 router.delete('/:sessionId/terms/:id', async (req, res) => {
   try {
-    const term = await Term.findByIdAndDelete(req.params.id);
+    const termId = req.params.id;
+    const term = await Term.findByIdAndDelete(termId);
     if (!term) {
       return res.status(404).json({ error: 'Term not found' });
     }
     res.status(200).json({ message: 'Term deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status (500).json({ error: error.message });
   }
 });
 
@@ -147,11 +137,13 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects', (req, res) => 
 // Lesson Plan Routes
 router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', upload.single('lessonPlan'), async (req, res) => {
   const { title } = req.body;
+
   if (!title || !req.file) {
-    return res.status(400).json({ message: 'Title and file are required' });
+    return res.status(400).json({ message: 'All fields are required' });
   }
 
   const { filename } = req.file;
+
   try {
     const lessonPlan = new LessonPlan({
       title,
@@ -159,94 +151,126 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
       sessionId: req.params.sessionId,
       termId: req.params.termId,
       classId: req.params.classId,
-      subjectId: parseInt(req.params.subjectId),
+      subjectId: parseInt(req.params.subjectId), // Ensure subjectId is numeric
       comments: []
     });
     await lessonPlan.save();
 
-    const subject = (parseInt(req.params.classId) >= 1 && parseInt(req.params.classId) <= 3)
-      ? juniorSubjects.find(sub => sub.id === parseInt(req.params.subjectId))
-      : seniorSubjects.find(sub => sub.id === parseInt(req.params.subjectId)) || { name: 'Unknown Subject' };
+    let subject;
+    if (parseInt(req.params.classId) >= 1 && parseInt(req.params.classId) <= 3) {
+      subject = juniorSubjects.find(sub => sub.id === parseInt(req.params.subjectId));
+    } else {
+      subject = seniorSubjects.find(sub => sub.id === parseInt(req.params.subjectId));
+    }
+    
+    if (!subject) {
+      subject = { name: 'Unknown Subject' };
+    }
 
     // Fetch existing lesson plans
-    const existingLessonPlans = await LessonPlan.find({
-      sessionId: new mongoose.Types.ObjectId(req.params.sessionId),
-      termId: new mongoose.Types.ObjectId(req.params.termId),
+    const existingLessonPlans = await LessonPlan.find({ 
+      sessionId: new mongoose.Types.ObjectId(req.params.sessionId), 
+      termId: new mongoose.Types.ObjectId(req.params.termId), 
       classId: req.params.classId,
-      subjectId: parseInt(req.params.subjectId)
+      subjectId: parseInt(req.params.subjectId) 
     });
 
-    res.status(201).json({
-      message: 'Lesson plan uploaded successfully',
-      lessonPlan: {
-        ...lessonPlan.toObject(),
-        subjectName: subject.name
+    res.status(201).json({ 
+      message: 'Lesson plan uploaded successfully', 
+      lessonPlan: { 
+        ...lessonPlan.toObject(), 
+        subjectName: subject.name 
       },
-      existingLessonPlans // Send existing lesson plans along with the response
+      existingLessonPlans: existingLessonPlans // Send existing lesson plans along with the response
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
+// Fetch lesson plans by class
+// Fetch lesson plans by class
 router.get('/:sessionId/terms/:termId/classes/:classId/lessonPlans', async (req, res) => {
-  try {
-    const lessonPlans = await LessonPlan.find({
-      sessionId: new mongoose.Types.ObjectId(req.params.sessionId),
-      termId: new mongoose.Types.ObjectId(req.params.termId),
-      classId: parseInt(req.params.classId)
-    }).populate('sessionId termId classId subjectId comments', 'name text');
+try {
+  const { sessionId, termId, classId } = req.params;
 
-    if (!lessonPlans.length) {
-      return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
-    }
-
-    const updatedLessonPlans = lessonPlans.map(lessonPlan => {
-      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
-
-      const subjectId = lessonPlan.subjectId;
-      const subject = (parseInt(req.params.classId) >= 1 && parseInt(req.params.classId) <= 3)
-        ? juniorSubjects.find(sub => sub.id === subjectId)
-        : seniorSubjects.find(sub => sub.id === subjectId);
-
-      return {
-        ...lessonPlan.toObject(),
-        subjectName: subject ? subject.name : 'Unknown Subject',
-        fileUrl
-      };
-    });
-
-    res.status(200).json(updatedLessonPlans);
-  } catch (error) {
-    console.error('Error fetching lesson plans:', error);
-    res.status(500).json({ error: error.message });
+  console.log(`Fetching lesson plans for sessionId: ${sessionId}, termId: ${termId}, classId: ${classId}`);
+  
+  const lessonPlans = await LessonPlan.find({ 
+    sessionId: new mongoose.Types.ObjectId(sessionId), 
+    termId: new mongoose.Types.ObjectId(termId), 
+    classId: parseInt(classId) // Ensure classId is numeric
+  }).populate('sessionId termId classId comments subjectId', 'name');
+  
+  console.log('Lesson Plans:', lessonPlans);
+  
+  if (!lessonPlans.length) {
+    return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
   }
+
+  const updatedLessonPlans = lessonPlans.map(lessonPlan => {
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
+    
+    // Determine the subject name based on the subject ID
+    let subjectName = 'Unknown Subject';
+    const subjectId = lessonPlan.subjectId;
+    
+    if (parseInt(classId) >= 1 && parseInt(classId) <= 3) {
+      const subject = juniorSubjects.find(sub => sub.id === subjectId);
+      if (subject) subjectName = subject.name;
+    } else if (parseInt(classId) >= 4 && parseInt(classId) <= 6) {
+      const subject = seniorSubjects.find(sub => sub.id === subjectId);
+      if (subject) subjectName = subject.name;
+    }
+    
+    return {
+      ...lessonPlan.toObject(),
+      subjectName,
+      fileUrl
+    };
+  });
+
+  res.status(200).json(updatedLessonPlans);
+} catch (error) {
+  console.error('Error fetching lesson plans:', error);
+  res.status(500).json({ error: error.message });
+}
 });
 
+
+
+// Fetch lesson plans by subject and class
 router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', async (req, res) => {
   try {
-    const lessonPlans = await LessonPlan.find({
-      sessionId: new mongoose.Types.ObjectId(req.params.sessionId),
-      termId: new mongoose.Types.ObjectId(req.params.termId),
-      classId: parseInt(req.params.classId),
-      subjectId: parseInt(req.params.subjectId)
-    }).populate('sessionId termId classId comments', 'name text');
+    const { sessionId, termId, classId, subjectId } = req.params;
+
+    const lessonPlans = await LessonPlan.find({ 
+      sessionId: new mongoose.Types.ObjectId(sessionId), 
+      termId: new mongoose.Types.ObjectId(termId), 
+      classId: parseInt(classId), // Ensure classId is numeric
+      subjectId: parseInt(subjectId) // Ensure subjectId is numeric
+    }).populate('sessionId termId comments', 'name');
 
     if (!lessonPlans.length) {
       return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
     }
 
+    let subject;
+    if (parseInt(classId) >= 1 && parseInt(classId) <= 3) {
+      subject = juniorSubjects.find(sub => sub.id === parseInt(subjectId));
+    } else {
+      subject = seniorSubjects.find(sub => sub.id === parseInt(subjectId));
+    }
+    
+    if (!subject) {
+      subject = { name: 'Unknown Subject' };
+    }
+
     const updatedLessonPlans = lessonPlans.map(lessonPlan => {
-      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
-
-      const subjectId = lessonPlan.subjectId;
-      const subject = (parseInt(req.params.classId) >= 1 && parseInt(req.params.classId) <= 3)
-        ? juniorSubjects.find(sub => sub.id === subjectId)
-        : seniorSubjects.find(sub => sub.id === subjectId);
-
+      const fileUrl = `${req.protocol}://${req.get('host')}/${lessonPlan.file}`;
       return {
         ...lessonPlan.toObject(),
-        subjectName: subject ? subject.name : 'Unknown Subject',
+        subjectName: subject.name,
         fileUrl
       };
     });
@@ -258,57 +282,163 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
   }
 });
 
-// Comment routes
-router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId/comments', async (req, res) => {
-  const { text } = req.body;
-  if (!text) {
-    return res.status(400).json({ message: 'Text is required' });
-  }
-
+// Update lesson plan
+router.put('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId', async (req, res) => {
   try {
-    const comment = new Comment({
-      text,
-      lessonPlanId: req.params.lessonPlanId
-    });
-    await comment.save();
+    const { lessonPlanId } = req.params;
+    const { title } = req.body;
 
-    const lessonPlan = await LessonPlan.findById(req.params.lessonPlanId);
-    if (!lessonPlan) {
-      return res.status(404).json({ message: 'Lesson plan not found' });
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required' });
     }
+
+    const lessonPlan = await LessonPlan.findByIdAndUpdate(lessonPlanId, { title }, { new: true, runValidators: true });
+    if (!lessonPlan) {
+      return res.status(404).json({ error: 'Lesson plan not found' });
+    }
+
+    res.status(200).json(lessonPlan);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a lesson plan
+router.delete('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId', async (req, res) => {
+  try {
+    const { lessonPlanId } = req.params;
+
+    const lessonPlan = await LessonPlan.findByIdAndDelete(lessonPlanId);
+    if (!lessonPlan) {
+      return res.status(404).json({ error: 'Lesson plan not found' });
+    }
+
+    res.status(200).json({ message: 'Lesson plan deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fetch subjects uploaded by user
+router.get('/:sessionId/terms/:termId/subjects/:subjectId/lessonPlans', async (req, res) => {
+  try {
+    const { sessionId, termId, subjectId } = req.params;
+
+    console.log(`Fetching lesson plans for sessionId: ${sessionId}, termId: ${termId}, subjectId: ${subjectId}`);
+    
+    const lessonPlans = await LessonPlan.find({ 
+      sessionId: new mongoose.Types.ObjectId(sessionId), 
+      termId: new mongoose.Types.ObjectId(termId), 
+      subjectId: parseInt(subjectId) // Ensure subjectId is numeric
+    }).populate('sessionId termId classId comments subjectId', 'name');
+    
+    console.log('Lesson Plans:', lessonPlans);
+
+    if (!lessonPlans.length) {
+      return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
+    }
+
+    let subject = juniorSubjects.find(sub => sub.id === parseInt(subjectId)) || 
+                  seniorSubjects.find(sub => sub.id === parseInt(subjectId)) || 
+                  { name: 'Unknown Subject' };
+
+    const updatedLessonPlans = lessonPlans.map(lessonPlan => {
+      const fileUrl = `${req.protocol}://${req.get('host')}/${lessonPlan.file}`;
+      return {
+        ...lessonPlan.toObject(),
+        subjectName: subject.name,
+        fileUrl
+      };
+    });
+
+    res.status(200).json(updatedLessonPlans);
+  } catch (error) {
+    console.error('Error fetching lesson plans:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Comment Routes
+
+// Add a comment to a lesson plan
+router.post('/:sessionId/terms/:termId/classes/:classId/lessonPlans/:lessonPlanId/comments', async (req, res) => {
+  try {
+    const { lessonPlanId } = req.params;
+   const { text } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ error: 'Comment text is required' });
+    }
+
+    const lessonPlan = await LessonPlan.findById(lessonPlanId);
+
+    if (!lessonPlan) {
+      return res.status(404).json({ error: 'Lesson Plan not found' });
+    }
+
+    const comment = new Comment({ text, lessonPlan: lessonPlanId }); // Set lessonPlan reference here
+    await comment.save();
 
     lessonPlan.comments.push(comment._id);
     await lessonPlan.save();
 
-    res.status(201).json({ message: 'Comment added successfully', comment });
+    res.status(201).json(comment);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
+
+
+// Fetch comments for a specific lesson plan
 router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId/comments', async (req, res) => {
   try {
-    const comments = await Comment.find({ lessonPlanId: req.params.lessonPlanId });
-    res.status(200).json(comments);
+    const { lessonPlanId } = req.params;
+    const lessonPlan = await LessonPlan.findById(lessonPlanId).populate('comments'); // Ensure comments are populated
+    if (!lessonPlan) {
+      return res.status(404).json({ error: 'Lesson plan not found' });
+    }
+
+    res.status(200).json(lessonPlan.comments);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.delete('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId/comments/:commentId', async (req, res) => {
+
+// Update a comment
+router.put('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId/comments/:commentId', async (req, res) => {
   try {
-    const comment = await Comment.findByIdAndDelete(req.params.commentId);
+    const { commentId } = req.params;
+    const { text, author } = req.body;
+
+    if (!text || !author) {
+      return res.status(400).json({ error: 'Text and author are required' });
+    }
+
+    const comment = await Comment.findByIdAndUpdate(commentId, { text, author }, { new: true, runValidators: true });
     if (!comment) {
       return res.status(404).json({ error: 'Comment not found' });
     }
 
-    const lessonPlan = await LessonPlan.findById(req.params.lessonPlanId);
-    if (!lessonPlan) {
-      return res.status(404).json({ message: 'Lesson plan not found' });
+    res.status(200).json(comment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a comment
+router.delete('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId/comments/:commentId', async (req, res) => {
+  try {
+    const { commentId } = req.params;
+
+    const comment = await Comment.findByIdAndDelete(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
     }
 
-    lessonPlan.comments.pull(comment._id);
-    await lessonPlan.save();
+    // Also remove the comment from the lesson plan's comments array
+    await LessonPlan.findByIdAndUpdate(req.params.lessonPlanId, { $pull: { comments: commentId } });
 
     res.status(200).json({ message: 'Comment deleted successfully' });
   } catch (error) {
