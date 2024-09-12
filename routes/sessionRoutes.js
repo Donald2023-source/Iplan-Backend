@@ -210,7 +210,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/lessonPlans', async (req,
     }
 
     const updatedLessonPlans = lessonPlans.map(lessonPlan => {
-      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${lessonPlan.file}`;
+      const fileUrl = `${"https"}://${req.get('host')}/uploads/${lessonPlan.file}`;
 
       // Determine the subject name based on the subject ID
       let subjectName = 'Unknown Subject';
