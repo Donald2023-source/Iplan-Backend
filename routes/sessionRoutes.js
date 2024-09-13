@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
-
 const fs = require('fs'); 
 const Session = require('../models/Session');
 const Term = require('../models/Term');
@@ -11,6 +10,7 @@ const Comment = require('../models/comment');
 const classes = require('../data/classes');
 const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
+
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
@@ -153,49 +153,33 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
   const { title } = req.body;
   const file = req.file;
 
-  // Log request body and file for debugging
-  console.log('Request body:', req.body);
-  console.log('Uploaded file:', req.file);
-
   if (!title || !file) {
-    return res.status(400).json({ message: 'All fields are required, including the file' });
+    return res.status(400).json({ message: 'All fields are required' });
   }
 
   try {
-    // Check if the file buffer is available
-    if (!file.buffer) {
-      return res.status(400).json({ message: 'File buffer is missing' });
-    }
-
     // Upload file to Cloudinary
-    const result = await cloudinary.uploader.upload_stream({
+    const result = await cloudinary.uploader.upload(file.buffer, {
       resource_type: 'auto', // Automatically detect file type
       folder: 'lesson_plans' // Optional: organize files in a specific folder
-    }, (error, result) => {
-      if (error) {
-        return res.status(500).json({ message: 'Cloudinary upload error', error: error.message });
-      }
+    });
 
-      // Create a new lesson plan document
-      const lessonPlan = new LessonPlan({
-        title,
-        file: result.secure_url, // Cloudinary URL of the uploaded file
-        sessionId: req.params.sessionId,
-        termId: req.params.termId,
-        classId: req.params.classId,
-        subjectId: parseInt(req.params.subjectId),
-        comments: []
-      });
+    const lessonPlan = new LessonPlan({
+      title,
+      file: result.secure_url, // Cloudinary URL of the uploaded file
+      sessionId: req.params.sessionId,
+      termId: req.params.termId,
+      classId: req.params.classId,
+      subjectId: parseInt(req.params.subjectId),
+      comments: []
+    });
 
-      lessonPlan.save()
-        .then(() => res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan }))
-        .catch(err => res.status(500).json({ message: 'Database save error', error: err.message }));
-    }).end(file.buffer);
+    await lessonPlan.save();
+    res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 
 // Fetch lesson plans by class

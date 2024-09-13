@@ -10,7 +10,7 @@ const MongoStore = require('connect-mongo');
 const authRoutes = require('./routes/authRoutes');
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
-
+const cloudinary = require('./config/cloudinary'); // Cloudinary config
 dotenv.config();
 
 const app = express();
@@ -23,8 +23,11 @@ app.use(cors({
   credentials: true // If you need to allow cookies or other credentials
 }));
 
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
 
 // Serve static files from 'uploads' directory
 // app.use('/uploads', express.static(path.join(__dirname, './uploads')));
