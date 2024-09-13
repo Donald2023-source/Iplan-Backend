@@ -11,7 +11,6 @@ const Comment = require('../models/comment');
 const classes = require('../data/classes');
 const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
-
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
