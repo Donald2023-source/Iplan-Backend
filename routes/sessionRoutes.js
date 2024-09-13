@@ -154,31 +154,20 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
     const { title } = req.body;
     const file = req.file;
 
+    console.log('Request body:', req.body); // Debugging
+    console.log('Uploaded file:', file); // Debugging
+
     if (!title || !file) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Cloudinary will handle the upload via multer-storage-cloudinary
-    console.log('File:', file);
-    console.log('File URL:', file.path); // Cloudinary URL is available at file.path
-
-    const lessonPlan = new LessonPlan({
-      title,
-      file: file.path, // Store the Cloudinary URL
-      sessionId: req.params.sessionId,
-      termId: req.params.termId,
-      classId: req.params.classId,
-      subjectId: parseInt(req.params.subjectId),
-      comments: []
-    });
-
-    await lessonPlan.save();
-    res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
+    // Continue with upload logic
   } catch (error) {
     console.error('Error uploading lesson plan:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 
 // Fetch lesson plans by class
