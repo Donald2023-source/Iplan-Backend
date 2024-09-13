@@ -10,17 +10,23 @@ const MongoStore = require('connect-mongo');
 const authRoutes = require('./routes/authRoutes');
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
-
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('./config/cloudinaryConfig');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({
-  origin: 'http://localhost:5173', // Adjust this to match your frontend's origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // If you need to allow cookies or other credentials
-}));
+app.use(cors())
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'lesson_plans',
+    allowedFormats: ['pdf'],
+  },
+});
+const upload = multer({ storage: storage });
 
 app.use(cors());
 app.use(bodyParser.json());
