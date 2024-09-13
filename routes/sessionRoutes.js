@@ -1,8 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
 const fs = require('fs');
 const Session = require('../models/Session');
 const Term = require('../models/Term');
@@ -13,6 +10,10 @@ const classes = require('../data/classes');
 const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
 
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
+
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -22,6 +23,7 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage: storage });
+
 
 
 const router = express.Router();
@@ -146,6 +148,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects', (req, res) => 
   res.status(200).json(subjects);
 });
 
+// Upload Lesson Plan
 router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', upload.single('lessonPlan'), async (req, res) => {
   try {
     const { title } = req.body;
@@ -155,33 +158,22 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    console.log('Title:', title);
+    // Cloudinary will handle the upload via multer-storage-cloudinary
     console.log('File:', file);
-    console.log('File buffer length:', file.buffer.length); // Check buffer length
+    console.log('File URL:', file.path); // Cloudinary URL is available at file.path
 
-    // Handle file upload
-    cloudinary.uploader.upload_stream({ resource_type: 'auto', folder: 'lesson_plans' }, async (error, result) => {
-      if (error) {
-        console.error('Cloudinary upload error:', error);
-        return res.status(500).json({ error: error.message });
-      }
+    const lessonPlan = new LessonPlan({
+      title,
+      file: file.path, // Store the Cloudinary URL
+      sessionId: req.params.sessionId,
+      termId: req.params.termId,
+      classId: req.params.classId,
+      subjectId: parseInt(req.params.subjectId),
+      comments: []
+    });
 
-      console.log('Cloudinary upload result:', result);
-
-      const lessonPlan = new LessonPlan({
-        title,
-        file: result.secure_url, // Store the file URL
-        sessionId: req.params.sessionId,
-        termId: req.params.termId,
-        classId: req.params.classId,
-        subjectId: parseInt(req.params.subjectId),
-        comments: []
-      });
-
-      await lessonPlan.save();
-      res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
-    }).end(file.buffer);
-
+    await lessonPlan.save();
+    res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
   } catch (error) {
     console.error('Error uploading lesson plan:', error);
     res.status(500).json({ error: error.message });
