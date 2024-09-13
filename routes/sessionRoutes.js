@@ -154,8 +154,12 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
   const { title } = req.body;
   const file = req.file;
 
+  // Log request body and file for debugging
+  console.log('Request body:', req.body);
+  console.log('Uploaded file:', req.file);
+
   if (!title || !file) {
-    return res.status(400).json({ message: 'All fields are required' });
+    return res.status(400).json({ message: 'All fields are required, including the file' });
   }
 
   try {
@@ -181,6 +185,7 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Fetch lesson plans by class
 // Fetch lesson plans by class
