@@ -163,28 +163,40 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
   }
 
   try {
+    // Check if the file buffer is available
+    if (!file.buffer) {
+      return res.status(400).json({ message: 'File buffer is missing' });
+    }
+
     // Upload file to Cloudinary
-    const result = await cloudinary.uploader.upload(file.buffer, {
+    const result = await cloudinary.uploader.upload_stream({
       resource_type: 'auto', // Automatically detect file type
       folder: 'lesson_plans' // Optional: organize files in a specific folder
-    });
+    }, (error, result) => {
+      if (error) {
+        return res.status(500).json({ message: 'Cloudinary upload error', error: error.message });
+      }
 
-    const lessonPlan = new LessonPlan({
-      title,
-      file: result.secure_url, // Cloudinary URL of the uploaded file
-      sessionId: req.params.sessionId,
-      termId: req.params.termId,
-      classId: req.params.classId,
-      subjectId: parseInt(req.params.subjectId),
-      comments: []
-    });
+      // Create a new lesson plan document
+      const lessonPlan = new LessonPlan({
+        title,
+        file: result.secure_url, // Cloudinary URL of the uploaded file
+        sessionId: req.params.sessionId,
+        termId: req.params.termId,
+        classId: req.params.classId,
+        subjectId: parseInt(req.params.subjectId),
+        comments: []
+      });
 
-    await lessonPlan.save();
-    res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
+      lessonPlan.save()
+        .then(() => res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan }))
+        .catch(err => res.status(500).json({ message: 'Database save error', error: err.message }));
+    }).end(file.buffer);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 
 // Fetch lesson plans by class
