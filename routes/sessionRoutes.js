@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
-const fs = require('fs'); 
+const fs = require('fs');
 const Session = require('../models/Session');
 const Term = require('../models/Term');
 const LessonPlan = require('../models/lessonPlan'); // Correct capitalization
@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
     }
     const newSession = new Session({ name, year, startDate, endDate });
     await newSession.save();
-    res.status(201).json({message: 'New session Created', newSession});
+    res.status(201).json({ message: 'New session Created', newSession });
   } catch (error) {
     res.status(500).json({ message: 'Something went wrong', error: error.message });
   }
@@ -95,7 +95,7 @@ router.post('/:sessionId/terms', async (req, res) => {
   try {
     const term = new Term({ ...req.body, sessionId: req.params.sessionId });
     await term.save();
-    res.status(201).json({message: 'New term created SuccessFully', term});
+    res.status(201).json({ message: 'New term created SuccessFully', term });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -119,7 +119,7 @@ router.delete('/:sessionId/terms/:id', async (req, res) => {
     }
     res.status(200).json({ message: 'Term deleted successfully' });
   } catch (error) {
-    res.status (500).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -146,35 +146,44 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects', (req, res) => 
   res.status(200).json(subjects);
 });
 
-// Lesson Plan Routes
 router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', upload.single('lessonPlan'), async (req, res) => {
-  const { title } = req.body;
-  const file = req.file;
-
-  if (!title || !file) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-
   try {
-    // Upload file to Cloudinary
-    const result = await cloudinary.uploader.upload(file.buffer, {
-      resource_type: 'auto', // Automatically detect file type
-      folder: 'lesson_plans' // Optional: organize files in a specific folder
-    });
+    const { title } = req.body;
+    const file = req.file;
 
-    const lessonPlan = new LessonPlan({
-      title,
-      file: result.secure_url, // Cloudinary URL of the uploaded file
-      sessionId: req.params.sessionId,
-      termId: req.params.termId,
-      classId: req.params.classId,
-      subjectId: parseInt(req.params.subjectId),
-      comments: []
-    });
+    if (!title || !file) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
 
-    await lessonPlan.save();
-    res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
+    console.log('Title:', title);
+    console.log('File:', file);
+    console.log('File buffer length:', file.buffer.length); // Check buffer length
+
+    // Handle file upload
+    cloudinary.uploader.upload_stream({ resource_type: 'auto', folder: 'lesson_plans' }, async (error, result) => {
+      if (error) {
+        console.error('Cloudinary upload error:', error);
+        return res.status(500).json({ error: error.message });
+      }
+
+      console.log('Cloudinary upload result:', result);
+
+      const lessonPlan = new LessonPlan({
+        title,
+        file: result.secure_url, // Store the file URL
+        sessionId: req.params.sessionId,
+        termId: req.params.termId,
+        classId: req.params.classId,
+        subjectId: parseInt(req.params.subjectId),
+        comments: []
+      });
+
+      await lessonPlan.save();
+      res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
+    }).end(file.buffer);
+
   } catch (error) {
+    console.error('Error uploading lesson plan:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -185,10 +194,51 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
 router.get('/:sessionId/terms/:termId/classes/:classId/lessonPlans', async (req, res) => {
   try {
     const { sessionId, termId, classId } = req.params;
+router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', upload.single('lessonPlan'), async (req, res) => {
+  try {
+    const { title } = req.body;
+    const file = req.file;
 
-    const lessonPlans = await LessonPlan.find({ 
-      sessionId: new mongoose.Types.ObjectId(sessionId), 
-      termId: new mongoose.Types.ObjectId(termId), 
+    if (!title || !file) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    console.log('Title:', title);
+    console.log('File:', file);
+    console.log('File buffer length:', file.buffer.length); // Check buffer length
+
+    // Handle file upload
+    cloudinary.uploader.upload_stream({ resource_type: 'auto', folder: 'lesson_plans' }, async (error, result) => {
+      if (error) {
+        console.error('Cloudinary upload error:', error);
+        return res.status(500).json({ error: error.message });
+      }
+
+      console.log('Cloudinary upload result:', result);
+
+      const lessonPlan = new LessonPlan({
+        title,
+        file: result.secure_url, // Store the file URL
+        sessionId: req.params.sessionId,
+        termId: req.params.termId,
+        classId: req.params.classId,
+        subjectId: parseInt(req.params.subjectId),
+        comments: []
+      });
+
+      await lessonPlan.save();
+      res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
+    }).end(file.buffer);
+
+  } catch (error) {
+    console.error('Error uploading lesson plan:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+    const lessonPlans = await LessonPlan.find({
+      sessionId: new mongoose.Types.ObjectId(sessionId),
+      termId: new mongoose.Types.ObjectId(termId),
       classId: parseInt(classId) // Ensure classId is numeric
     }).populate('sessionId termId classId subjectId comments', 'name text'); // Populate comments with their text
 
@@ -238,11 +288,11 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
     const { sessionId, termId, classId, subjectId } = req.params;
 
     res.setHeader('Content-Disposition', 'inline'); // This ensures the file opens in the browser
-    res.setHeader('Content-Type', 'application/pdf'); 
+    res.setHeader('Content-Type', 'application/pdf');
 
-    const lessonPlans = await LessonPlan.find({ 
-      sessionId: new mongoose.Types.ObjectId(sessionId), 
-      termId: new mongoose.Types.ObjectId(termId), 
+    const lessonPlans = await LessonPlan.find({
+      sessionId: new mongoose.Types.ObjectId(sessionId),
+      termId: new mongoose.Types.ObjectId(termId),
       classId: parseInt(classId), // Ensure classId is numeric
       subjectId: parseInt(subjectId) // Ensure subjectId is numeric
     }).populate('sessionId termId classId comments', 'name text'); // Populate comments with their text
@@ -257,7 +307,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
     } else {
       subject = seniorSubjects.find(sub => sub.id === parseInt(subjectId));
     }
-    
+
     if (!subject) {
       subject = { name: 'Unknown Subject' };
     }
@@ -342,22 +392,22 @@ router.get('/:sessionId/terms/:termId/subjects/:subjectId/lessonPlans', async (r
     const { sessionId, termId, subjectId } = req.params;
 
     console.log(`Fetching lesson plans for sessionId: ${sessionId}, termId: ${termId}, subjectId: ${subjectId}`);
-    
-    const lessonPlans = await LessonPlan.find({ 
-      sessionId: new mongoose.Types.ObjectId(sessionId), 
-      termId: new mongoose.Types.ObjectId(termId), 
+
+    const lessonPlans = await LessonPlan.find({
+      sessionId: new mongoose.Types.ObjectId(sessionId),
+      termId: new mongoose.Types.ObjectId(termId),
       subjectId: parseInt(subjectId) // Ensure subjectId is numeric
     }).populate('sessionId termId classId comments subjectId', 'name');
-    
+
     console.log('Lesson Plans:', lessonPlans);
 
     if (!lessonPlans.length) {
       return res.status(404).json({ error: 'No lesson plans found for the specified criteria' });
     }
 
-    let subject = juniorSubjects.find(sub => sub.id === parseInt(subjectId)) || 
-                  seniorSubjects.find(sub => sub.id === parseInt(subjectId)) || 
-                  { name: 'Unknown Subject' };
+    let subject = juniorSubjects.find(sub => sub.id === parseInt(subjectId)) ||
+      seniorSubjects.find(sub => sub.id === parseInt(subjectId)) ||
+      { name: 'Unknown Subject' };
 
     const updatedLessonPlans = lessonPlans.map(lessonPlan => {
       const fileUrl = `${req.protocol}://${req.get('host')}/${lessonPlan.file}`;
@@ -381,7 +431,7 @@ router.get('/:sessionId/terms/:termId/subjects/:subjectId/lessonPlans', async (r
 router.post('/:sessionId/terms/:termId/classes/:classId/lessonPlans/:lessonPlanId/comments', async (req, res) => {
   try {
     const { lessonPlanId } = req.params;
-   const { text } = req.body;
+    const { text } = req.body;
 
     if (!text) {
       return res.status(400).json({ error: 'Comment text is required' });
@@ -421,7 +471,7 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
     res.status(500).json({ error: error.message });
   }
 });
-  
+
 
 
 // Update a comment
