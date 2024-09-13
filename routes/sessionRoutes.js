@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const multer = require('multer');
-const upload = multer({dest: './uploads/'})
+
 
 const fs = require('fs'); 
 const Session = require('../models/Session');
@@ -12,6 +11,21 @@ const Comment = require('../models/comment');
 const classes = require('../data/classes');
 const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
+
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'lesson_plans', // Folder name in Cloudinary
+    allowedFormats: ['pdf'], // Allowed file types
+  },
+});
+
+const upload = multer({ storage: storage });
+
 
 const router = express.Router();
 
@@ -138,56 +152,31 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects', (req, res) => 
 // Lesson Plan Routes
 router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', upload.single('lessonPlan'), async (req, res) => {
   const { title } = req.body;
+  const file = req.file;
 
-  if (!title || !req.file) {
+  if (!title || !file) {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
-  const { filename } = req.file;
-
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Content-Disposition', 'inline');
-  res.setHeader('Content-Type', 'application/pdf');
-
   try {
+    // Upload file to Cloudinary
+    const result = await cloudinary.uploader.upload(file.buffer, {
+      resource_type: 'auto', // Automatically detect file type
+      folder: 'lesson_plans' // Optional: organize files in a specific folder
+    });
+
     const lessonPlan = new LessonPlan({
       title,
-      file: filename,
+      file: result.secure_url, // Cloudinary URL of the uploaded file
       sessionId: req.params.sessionId,
       termId: req.params.termId,
       classId: req.params.classId,
-      subjectId: parseInt(req.params.subjectId), // Ensure subjectId is numeric
+      subjectId: parseInt(req.params.subjectId),
       comments: []
     });
+
     await lessonPlan.save();
-
-    let subject;
-    if (parseInt(req.params.classId) >= 1 && parseInt(req.params.classId) <= 3) {
-      subject = juniorSubjects.find(sub => sub.id === parseInt(req.params.subjectId));
-    } else {
-      subject = seniorSubjects.find(sub => sub.id === parseInt(req.params.subjectId));
-    }
-    
-    if (!subject) {
-      subject = { name: 'Unknown Subject' };
-    }
-
-    // Fetch existing lesson plans
-    const existingLessonPlans = await LessonPlan.find({ 
-      sessionId: new mongoose.Types.ObjectId(req.params.sessionId), 
-      termId: new mongoose.Types.ObjectId(req.params.termId), 
-      classId: req.params.classId,
-      subjectId: parseInt(req.params.subjectId) 
-    });
-
-    res.status(201).json({ 
-      message: 'Lesson plan uploaded successfully', 
-      lessonPlan: { 
-        ...lessonPlan.toObject(), 
-        subjectName: subject.name 
-      },
-      existingLessonPlans: existingLessonPlans // Send existing lesson plans along with the response
-    });
+    res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -330,22 +319,24 @@ router.put('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lesso
   }
 });
 
+//delete Lesson Plan
 
-// Delete a lesson plan
 router.delete('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans/:lessonPlanId', async (req, res) => {
   try {
-    const { lessonPlanId } = req.params;
-
-    const lessonPlan = await LessonPlan.findByIdAndDelete(lessonPlanId);
+    const lessonPlan = await LessonPlan.findByIdAndDelete(req.params.lessonPlanId);
     if (!lessonPlan) {
       return res.status(404).json({ error: 'Lesson plan not found' });
     }
 
-    res.status(200).json({ message: 'Lesson plan deleted successfully' });
+    // Delete the file from Cloudinary
+    await cloudinary.uploader.destroy(lessonPlan.fileId); // Cloudinary file ID
+
+    res.status(200).json({ message: 'Lesson plan and associated file deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Fetch subjects uploaded by user
 router.get('/:sessionId/terms/:termId/subjects/:subjectId/lessonPlans', async (req, res) => {
