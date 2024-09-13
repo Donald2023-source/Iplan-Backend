@@ -12,7 +12,7 @@ const seniorSubjects = require('../data/seniorSubjects');
 
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
+const cloudinary = require('../config/cloudinaryConfig');
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -149,10 +149,10 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects', (req, res) => 
 });
 
 router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', upload.single('lessonPlan'), async (req, res) => {
-  try {
-    console.log('Request body:', req.body); // Log the request body
-    console.log('File:', req.file); // Log the uploaded file info
+  console.log('Request body:', req.body);
+  console.log('File:', req.file);
 
+  try {
     const { title } = req.body;
     const file = req.file;
 
@@ -160,26 +160,13 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const result = await cloudinary.uploader.upload(file.buffer, { resource_type: 'auto', folder: 'lesson_plans' });
-    console.log('Cloudinary upload result:', result);
-
-    const lessonPlan = new LessonPlan({
-      title,
-      file: result.secure_url,
-      sessionId: req.params.sessionId,
-      termId: req.params.termId,
-      classId: parseInt(req.params.classId),
-      subjectId: parseInt(req.params.subjectId),
-      comments: []
-    });
-
-    await lessonPlan.save();
-    res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
+    // Upload to Cloudinary and save to database...
   } catch (error) {
     console.error('Error uploading lesson plan:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 
 
