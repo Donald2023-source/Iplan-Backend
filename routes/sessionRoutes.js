@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
 const fs = require('fs'); 
 const Session = require('../models/Session');
 const Term = require('../models/Term');
@@ -11,15 +13,11 @@ const classes = require('../data/classes');
 const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
 
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinaryConfig'); // Cloudinary configuration file
-
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'lesson_plans', // Folder name in Cloudinary
-    allowedFormats: ['pdf'], // Allowed file types
+    folder: 'lesson_plans',
+    allowedFormats: ['pdf'],
   },
 });
 

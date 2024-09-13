@@ -10,8 +10,7 @@ const MongoStore = require('connect-mongo');
 const authRoutes = require('./routes/authRoutes');
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
-const cloudinary = require('./config/cloudinary'); // Cloudinary config
-dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
