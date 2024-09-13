@@ -17,10 +17,10 @@ const router = express.Router();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '../uploads'); // Upload destination directory
+    cb(null, path.join(__dirname, '../uploads')); // Using absolute path
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname); // Naming convention for uploaded files
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
