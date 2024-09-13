@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const upload = require('../config/multerConfig')
+
 
 const fs = require('fs'); 
 const Session = require('../models/Session');
@@ -14,6 +14,18 @@ const juniorSubjects = require('../data/juniorSubjects');
 const seniorSubjects = require('../data/seniorSubjects');
 
 const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, '../uploads'); // Upload destination directory
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Naming convention for uploaded files
+  }
+});
+
+const upload = multer({ storage: storage });
+
 
 // Session routes
 router.post('/', async (req, res) => {
