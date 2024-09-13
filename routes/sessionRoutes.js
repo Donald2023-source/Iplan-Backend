@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const upload = require({dest: '../uploads'})
+const upload = multer({dest: '../uploads'})
 
 const fs = require('fs'); 
 const Session = require('../models/Session');
