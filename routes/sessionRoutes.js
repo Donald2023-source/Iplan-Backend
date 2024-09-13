@@ -19,10 +19,12 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'lesson_plans',
     allowedFormats: ['pdf'],
+    resource_type: 'raw' // For raw files like PDFs
   },
 });
 
 const upload = multer({ storage: storage });
+
 
 
 
@@ -160,12 +162,12 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const result = await cloudinary.uploader.upload(file.buffer, { resource_type: 'auto', folder: 'lesson_plans' });
-    console.log('Cloudinary upload result:', result);
+    // The file URL is directly available from `req.file`
+    const fileUrl = file.path;
 
     const lessonPlan = new LessonPlan({
       title,
-      file: result.secure_url,
+      file: fileUrl,
       sessionId: req.params.sessionId,
       termId: req.params.termId,
       classId: parseInt(req.params.classId),
@@ -180,6 +182,8 @@ router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/less
     res.status(500).json({ error: error.message });
   }
 });
+
+
 
 
 
