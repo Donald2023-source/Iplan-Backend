@@ -148,20 +148,33 @@ router.get('/:sessionId/terms/:termId/classes/:classId/subjects', (req, res) => 
   res.status(200).json(subjects);
 });
 
-// Upload Lesson Plan
 router.post('/:sessionId/terms/:termId/classes/:classId/subjects/:subjectId/lessonPlans', upload.single('lessonPlan'), async (req, res) => {
   try {
+    console.log('Request body:', req.body); // Log the request body
+    console.log('File:', req.file); // Log the uploaded file info
+
     const { title } = req.body;
     const file = req.file;
-
-    console.log('Request body:', req.body); // Debugging
-    console.log('Uploaded file:', file); // Debugging
 
     if (!title || !file) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Continue with upload logic
+    const result = await cloudinary.uploader.upload(file.buffer, { resource_type: 'auto', folder: 'lesson_plans' });
+    console.log('Cloudinary upload result:', result);
+
+    const lessonPlan = new LessonPlan({
+      title,
+      file: result.secure_url,
+      sessionId: req.params.sessionId,
+      termId: req.params.termId,
+      classId: parseInt(req.params.classId),
+      subjectId: parseInt(req.params.subjectId),
+      comments: []
+    });
+
+    await lessonPlan.save();
+    res.status(201).json({ message: 'Lesson plan uploaded successfully', lessonPlan });
   } catch (error) {
     console.error('Error uploading lesson plan:', error);
     res.status(500).json({ error: error.message });
